@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos trilhos Plan - Controle Financeiro Inteligente</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            dark: '#0b0f19',
+                            card: '#1e293b',
+                            border: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .glass-input:focus {
+            border-color: #22c55e;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+        .sidebar-transition {
+            transition: width 0.3s ease, padding 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0b0f19] text-gray-100 flex flex-col">
+
+    <!-- TELA DE AUTENTICAÇÃO / LOGIN & CADASTRO -->
+    <div id="authContainer" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b0f19]/90 backdrop-blur-md">
+        <div class="glass-card w-full max-w-md p-8 rounded-2xl shadow-2xl border border-slate-800 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-600/30 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-600/20 rounded-full blur-2xl"></div>
+
+            <div class="text-center mb-8 relative z-10">
+                <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-3 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19L20 19"/>
+                        <path d="M4 15L20 15"/>
+                        <path d="M7 11L17 11"/>
+                        <path d="M9 15V19"/>
+                        <path d="M15 15V19"/>
+                        <path d="M3 7l6-4 6 4 6-4"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">Nos trilhos Plan</h1>
+                <p class="text-sm text-gray-400 mt-1" id="authSubtitle">Acesse sua conta para manter suas finanças nos trilhos</p>
+            </div>
+
+            <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 relative z-10">
+                <div id="fieldNameContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Nome Completo</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="authName" class="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="Seu nome">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">E-mail</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                        <input type="email" id="authEmail" required class="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="seu@email.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Senha</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                        <input type="password" id="authPassword" required class="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="fieldAgeContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Idade (para recomendações de investimento)</label>
+                    <div class="relative">
+                        <i data-lucide="calendar" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                        <input type="number" id="authAge" min="12" max="110" class="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="Ex: 28">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnAuthSubmit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-medium rounded-xl transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2">
+                    <span>Entrar</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-gray-400 relative z-10">
+                <span id="authToggleText">Ainda não possui uma conta?</span>
+                <button type="button" onclick="toggleAuthMode()" id="btnToggleAuth" class="text-emerald-400 font-semibold hover:underline ml-1">
+                    Cadastrar-se
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERFACE PRINCIPAL DA APLICAÇÃO -->
+    <div id="appContainer" class="hidden flex-1 flex flex-col md:flex-row min-h-screen">
+        
+        <!-- NAVBAR SUPERIOR MOBILE -->
+        <header class="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-40">
+            <div onclick="switchTab('dashboard')" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19L20 19"/><path d="M4 15L20 15"/><path d="M7 11L17 11"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-white">Nos trilhos Plan</span>
+            </div>
+            <button onclick="toggleMobileMenu()" class="p-2 text-gray-300 hover:text-white rounded-lg bg-slate-800/80 border border-slate-700">
+                <i data-lucide="menu" id="mobileMenuIcon" class="w-6 h-6"></i>
+            </button>
+        </header>
+
+        <!-- MENU MOBILE EXPANSÍVEL -->
+        <div id="mobileNavMenu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 p-4 space-y-2 sticky top-[65px] z-30">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-emerald-400 bg-emerald-600/10 border border-emerald-500/20">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                Dashboard
+            </button>
+            <button onclick="switchTab('extrato'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-slate-800">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+                Extrato & Gastos
+            </button>
+            <button onclick="switchTab('dividas'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-slate-800">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                Dívidas & Financiamentos
+            </button>
+            <button onclick="switchTab('investimentos'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-slate-800">
+                <i data-lucide="trending-up" class="w-5 h-5"></i>
+                Investimentos & Bens
+            </button>
+            <button onclick="switchTab('metas'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-slate-800">
+                <i data-lucide="target" class="w-5 h-5"></i>
+                Metas & Sonhos
+            </button>
+            <button onclick="switchTab('nivel'); toggleMobileMenu()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-slate-800">
+                <i data-lucide="award" class="w-5 h-5"></i>
+                Nível & Conquistas
+            </button>
+        </div>
+
+        <!-- SIDEBAR DE NAVEGAÇÃO DESKTOP -->
+        <aside id="desktopSidebar" class="hidden md:flex sidebar-transition w-64 bg-slate-900/90 border-r border-slate-800 flex-col justify-between p-4 sticky top-0 h-screen z-30 backdrop-blur-md">
+            <div>
+                <div class="flex items-center justify-between mb-6 px-1">
+                    <div onclick="switchTab('dashboard')" class="flex items-center gap-3 overflow-hidden logo-full cursor-pointer hover:opacity-80 transition" title="Ir para o Dashboard">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-emerald-600/30">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19L20 19"/>
+                                <path d="M4 15L20 15"/>
+                                <path d="M7 11L17 11"/>
+                                <path d="M9 15V19"/>
+                                <path d="M15 15V19"/>
+                            </svg>
+                        </div>
+                        <div class="sidebar-text truncate">
+                            <h2 class="font-bold text-white text-base leading-tight truncate">Nos trilhos</h2>
+                            <span class="text-xs text-emerald-400 font-semibold tracking-wider uppercase">Plan</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleDesktopSidebar()" title="Recolher / Expandir Menu" class="p-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition shrink-0">
+                        <i data-lucide="panel-left-close" id="sidebarToggleIcon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <nav class="space-y-1.5">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" title="Dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition bg-emerald-600/20 text-emerald-300 border border-emerald-500/30">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('extrato')" id="nav-extrato" title="Extrato & Gastos" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="receipt" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Extrato & Gastos</span>
+                    </button>
+                    <button onclick="switchTab('dividas')" id="nav-dividas" title="Dívidas & Financiamentos" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="credit-card" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Dívidas & Financiamentos</span>
+                    </button>
+                    <button onclick="switchTab('investimentos')" id="nav-investimentos" title="Investimentos & Bens" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="trending-up" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Investimentos & Bens</span>
+                    </button>
+                    <button onclick="switchTab('metas')" id="nav-metas" title="Metas & Sonhos" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="target" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Metas & Sonhos</span>
+                    </button>
+                    <button onclick="switchTab('nivel')" id="nav-nivel" title="Nível & Conquistas" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="award" class="w-5 h-5 shrink-0"></i>
+                        <span class="sidebar-text truncate">Nível & Conquistas</span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800">
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/40">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center font-bold text-sm shrink-0">
+                            <span id="userAvatar">U</span>
+                        </div>
+                        <div class="sidebar-text truncate">
+                            <p id="userName" class="text-sm font-medium text-white truncate">Usuário</p>
+                            <p id="userAgeBadge" class="text-xs text-gray-400">Idade: -- anos</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" title="Sair" class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition shrink-0">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+
+            <!-- TAB 1: DASHBOARD CENTRAL -->
+            <section id="tab-dashboard" class="space-y-6">
+                
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                            <span>Visão Geral - Nos trilhos Plan</span>
+                        </h1>
+                        <p class="text-sm text-gray-400 mt-1">Central de controle orçamentário e registros rápidos em tempo real</p>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full lg:w-auto">
+                        <button onclick="openQuickModal('entrada')" class="flex-1 lg:flex-none px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5">
+                            <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
+                            <span>+ Dinheiro chegou</span>
+                        </button>
+                        <button onclick="openQuickModal('saida')" class="flex-1 lg:flex-none px-5 py-3 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2.5">
+                            <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+                            <span>- Gastei algo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARDS DE MÉTRICAS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-emerald-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Saldo Total</span>
+                            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                                <i data-lucide="wallet" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashSaldo" class="text-2xl font-bold text-white">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Balanço disponível</p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-emerald-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Entradas</span>
+                            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashEntradas" class="text-2xl font-bold text-emerald-400">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Receitas acumuladas</p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-rose-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Saídas / Gastos</span>
+                            <div class="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+                                <i data-lucide="trending-down" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashSaidas" class="text-2xl font-bold text-rose-400">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Despesas efetuadas</p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-indigo-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Meus Bens</span>
+                            <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                                <i data-lucide="home" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashBens" class="text-2xl font-bold text-indigo-400">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Patrimônio quitado</p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-sky-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Investimentos</span>
+                            <div class="p-2 rounded-lg bg-sky-500/10 text-sky-400">
+                                <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashInvestido" class="text-2xl font-bold text-sky-400">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Mercado financeiro</p>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition">
+                        <div class="flex items-center justify-between text-gray-400 mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Dívidas</span>
+                            <div class="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p id="dashDividas" class="text-2xl font-bold text-amber-400">R$ 0,00</p>
+                        <p class="text-xs text-gray-400 mt-2">Saldo a quitar</p>
+                    </div>
+                </div>
+
+                <!-- GRÁFICOS VISUAIS -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-lg text-white">Balanço Entradas vs Gastos</h3>
+                                <p class="text-xs text-gray-400">Comparativo do fluxo monetário</p>
+                            </div>
+                            <span class="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-semibold">Resumo Periódico</span>
+                        </div>
+                        <div class="h-64 relative w-full">
+                            <canvas id="chartBarFlow"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-lg text-white">Gastos por Categoria</h3>
+                                <p class="text-xs text-gray-400">Para onde está indo seu dinheiro</p>
+                            </div>
+                        </div>
+                        <div class="h-64 relative w-full flex items-center justify-center">
+                            <canvas id="chartDoughnutCategories"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DICA POR IDADE -->
+                <div class="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 rounded-2xl bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 shrink-0">
+                            <i data-lucide="sparkles" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-lg text-white">Recomendação Personalizada por Idade</h3>
+                                <span id="recAgeBadge" class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-semibold">Idade: 0 anos</span>
+                            </div>
+                            <p id="recTitle" class="text-emerald-200 font-semibold mt-1">Estratégia Orçamentária</p>
+                            <p id="recDesc" class="text-sm text-gray-300 mt-2 leading-relaxed">
+                                Sugestões calibradas de acordo com o seu momento de vida.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÚLTIMAS TRANSAÇÕES -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg text-white">Últimas Movimentações Registradas</h3>
+                        <button onclick="switchTab('extrato')" class="text-sm text-emerald-400 hover:underline font-semibold flex items-center gap-1">
+                            <span>Ver Extrato Completo</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-slate-800/80 text-gray-400">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">Tipo</th>
+                                    <th class="p-3">Descrição / Razão</th>
+                                    <th class="p-3">Categoria</th>
+                                    <th class="p-3">Data</th>
+                                    <th class="p-3 text-right rounded-r-lg">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashRecentTable" class="divide-y divide-slate-800">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: EXTRATO & CONTROLE DE GASTOS -->
+            <section id="tab-extrato" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Extrato & Controle de Gastos</h1>
+                        <p class="text-sm text-gray-400">Acompanhe entradas, gastos por categoria e histórico detalhado</p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button onclick="openQuickModal('entrada')" class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            + Nova Entrada
+                        </button>
+                        <button onclick="openQuickModal('saida')" class="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20">
+                            <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                            - Novo Gasto
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex border-b border-slate-800 gap-2 overflow-x-auto">
+                    <button onclick="switchExtratoSubTab('geral')" id="subnav-geral" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 whitespace-nowrap">
+                        Visão Geral de Extrato
+                    </button>
+                    <button onclick="switchExtratoSubTab('categorias')" id="subnav-categorias" class="px-4 py-2.5 text-sm font-semibold text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap">
+                        Gastos por Categoria
+                    </button>
+                    <button onclick="switchExtratoSubTab('entradas')" id="subnav-entradas" class="px-4 py-2.5 text-sm font-semibold text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap">
+                        Entradas e Salários
+                    </button>
+                </div>
+
+                <div id="extrato-view-geral" class="space-y-4">
+                    <div class="glass-card p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-4 items-center">
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Buscar Transação</label>
+                            <input type="text" id="filterSearch" oninput="renderExtratoTable()" placeholder="Buscar por Salário, Ração, Luz, Gasolina..." class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Filtrar Categoria</label>
+                            <select id="filterCategory" onchange="renderExtratoTable()" class="glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="todos">Todas as Categorias</option>
+                                <option value="Casa">Casa</option>
+                                <option value="Veículo">Veículo</option>
+                                <option value="Cartões">Cartões</option>
+                                <option value="Trabalho">Trabalho / Negócios</option>
+                                <option value="Relacionamento">Relacionamento / Lazer</option>
+                                <option value="Saúde">Saúde & Estilo de Vida</option>
+                                <option value="Pets">Pets</option>
+                                <option value="Comprinha (Casual / Avulso)">Comprinha (Casual / Avulso)</option>
+                                <option value="Entrada">Entradas / Receitas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-slate-800/80 text-gray-400">
+                                    <tr>
+                                        <th class="p-3 rounded-l-lg">Tipo</th>
+                                        <th class="p-3">Categoria</th>
+                                        <th class="p-3">Razão / Detalhes</th>
+                                        <th class="p-3">Data</th>
+                                        <th class="p-3 text-right">Valor</th>
+                                        <th class="p-3 text-center rounded-r-lg">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extratoFullTable" class="divide-y divide-slate-800">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="extrato-view-categorias" class="hidden space-y-6">
+                    <div id="categoryCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+                </div>
+
+                <div id="extrato-view-entradas" class="hidden space-y-6">
+                    <div class="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/10">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="font-bold text-lg text-white">Relatório de Entradas e Receitas</h3>
+                                <p class="text-xs text-emerald-400 mt-0.5">Histórico exclusivo de salários, dividendos e recebimentos</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-gray-400">Total Entradas:</span>
+                                <p id="entradasTotalVal" class="text-xl font-bold text-emerald-400">R$ 0,00</p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-slate-800/80 text-emerald-400">
+                                    <tr>
+                                        <th class="p-3 rounded-l-lg">Fonte / Razão</th>
+                                        <th class="p-3">Descrição</th>
+                                        <th class="p-3">Data</th>
+                                        <th class="p-3 text-right rounded-r-lg">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entradasTable" class="divide-y divide-slate-800">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: DÍVIDAS & FINANCIAMENTOS COM MIGRAÇÃO AUTOMÁTICA -->
+            <section id="tab-dividas" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Gestão de Dívidas & Financiamentos</h1>
+                        <p class="text-sm text-gray-400">Cadastre financiamentos de veículos e imóveis. Ao quitar, migre automaticamente para Meus Bens!</p>
+                    </div>
+                    <button onclick="openDebtModal()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg shadow-amber-600/20">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Cadastrar Financiamento / Dívida
+                    </button>
+                </div>
+
+                <div id="dividasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+
+            <!-- TAB 4: INVESTIMENTOS & BENS PATRIMONIAIS -->
+            <section id="tab-investimentos" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Investimentos & Meus Bens</h1>
+                        <p class="text-sm text-gray-400">Acompanhe ativos financeiros, Tabela FIPE de veículos, imóveis e análise de valorização/desvalorização</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="openBemModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                            + Cadastrar Bem / Imóvel
+                        </button>
+                        <button onclick="openInvestmentModal()" class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg shadow-sky-600/20">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            + Novo Aporte
+                        </button>
+                    </div>
+                </div>
+
+                <!-- INVESTIMENTOS MERCADO -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-white">Aportes e Investimentos Financeiros</h3>
+                            <p class="text-xs text-gray-400">Renda Fixa, Ações, FIIs e Reserva de Emergência</p>
+                        </div>
+                        <span id="investimentosTotalVal" class="text-lg font-bold text-sky-400">Total: R$ 0,00</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-slate-800/80 text-gray-400">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">Ativo / Aporte</th>
+                                    <th class="p-3">Categoria</th>
+                                    <th class="p-3 text-right">Valor Aplicado</th>
+                                    <th class="p-3 text-center rounded-r-lg">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="investmentsTable" class="divide-y divide-slate-800">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO BENS E PATRIMÔNIO FÍSICO COM TABELA FIPE E VALORIZAÇÃO -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-white">Meus Bens & Patrimônio Físico Quitado</h3>
+                            <p class="text-xs text-gray-400">Com Tabela FIPE (Veículos), Endereço de Imóveis e Métricas de Valorização / Desvalorização</p>
+                        </div>
+                        <span id="bensTotalVal" class="text-lg font-bold text-indigo-400">Total: R$ 0,00</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-slate-800/80 text-gray-400">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">Nome do Bem / Detalhes</th>
+                                    <th class="p-3">Categoria / Tipo</th>
+                                    <th class="p-3 text-center">Tabela FIPE / Mercado</th>
+                                    <th class="p-3 text-center">Métrica A.A.</th>
+                                    <th class="p-3 text-right">Valor Estimado</th>
+                                    <th class="p-3 text-center rounded-r-lg">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bensTable" class="divide-y divide-slate-800">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: METAS & SONHOS (VISUALIZAR O FUTURO) -->
+            <section id="tab-metas" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                            <i data-lucide="target" class="text-emerald-400"></i> Metas & Sonhos para o Futuro
+                        </h1>
+                        <p class="text-sm text-gray-400">Planeje suas conquistas de curto, médio e longo prazo e visualize sua evolução patrimonial futura</p>
+                    </div>
+                    <button onclick="openMetaModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Nova Meta
+                    </button>
+                </div>
+
+                <!-- CARDS DE METAS -->
+                <div id="metasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+
+            <!-- TAB 6: NÍVEL & CONQUISTAS FINANCEIRAS -->
+            <section id="tab-nivel" class="hidden space-y-6">
+                <div class="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-indigo-950/40 p-6 sm:p-8 rounded-3xl border border-emerald-500/30 relative overflow-hidden shadow-2xl">
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                        <div class="flex items-center gap-5">
+                            <div id="levelBadgeIcon" class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center font-extrabold text-3xl shadow-xl shadow-emerald-600/30 border border-emerald-400/40">
+                                1
+                            </div>
+                            <div>
+                                <span class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Status Financeiro Atual</span>
+                                <h1 id="levelTitle" class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Iniciante nos Trilhos</h1>
+                                <p id="levelDesc" class="text-sm text-gray-300 mt-1">Construindo as bases para o sucesso financeiro.</p>
+                            </div>
+                        </div>
+                        <div class="text-center md:text-right bg-slate-900/80 px-6 py-4 rounded-2xl border border-slate-800 w-full md:w-auto">
+                            <span class="text-xs text-gray-400 uppercase tracking-wider block">Patrimônio Líquido Total</span>
+                            <span id="netWorthVal" class="text-2xl sm:text-3xl font-black text-emerald-400">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE XP DO NÍVEL -->
+                    <div class="mt-8 space-y-2 relative z-10">
+                        <div class="flex justify-between text-xs font-semibold text-gray-300">
+                            <span id="levelProgressText">Progresso para o Nível 2</span>
+                            <span id="levelProgressPct">0%</span>
+                        </div>
+                        <div class="w-full h-3.5 bg-slate-900/90 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                            <div id="levelBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONQUISTAS / MARCOS DESBLOQUEADOS -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <h3 class="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="award" class="text-amber-400"></i> Marcos e Conquistas Financeiras
+                    </h3>
+                    <div id="achievementsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE TRANSAÇÃO RÁPIDA -->
+    <div id="modalQuick" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-card w-full max-w-lg p-6 rounded-2xl border border-slate-700 relative">
+            <button onclick="closeQuickModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 id="quickModalTitle" class="text-xl font-bold text-white mb-4">Cadastrar Transação</h2>
+
+            <form onsubmit="handleQuickSubmit(event)" class="space-y-4">
+                <input type="hidden" id="quickType" value="saida">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Categoria Principal</label>
+                    <select id="quickCategory" onchange="updateRazaoOptions()" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                        <option value="Casa">Casa</option>
+                        <option value="Veículo">Veículo</option>
+                        <option value="Cartões">Cartões</option>
+                        <option value="Trabalho">Trabalho / Negócios</option>
+                        <option value="Relacionamento">Relacionamento / Lazer</option>
+                        <option value="Saúde">Saúde & Estilo de Vida</option>
+                        <option value="Pets">Pets</option>
+                        <option value="Comprinha (Casual / Avulso)">🛍️ Comprinha (Casual / Avulso)</option>
+                        <option value="Entrada">Entrada / Receita</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Razão / Subcategoria</label>
+                    <select id="quickRazao" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Descrição / Detalhes (Opcional)</label>
+                    <input type="text" id="quickDescription" placeholder="Ex: Ração do cão, Mercado, Almoço, Salário..." class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" min="0.01" required id="quickAmount" placeholder="0,00" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Data</label>
+                        <input type="date" required id="quickDate" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                    </div>
+                </div>
+
+                <button type="submit" id="quickSubmitBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl transition shadow-lg shadow-emerald-600/30">
+                    Salvar Registro
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DÍVIDA / FINANCIAMENTO -->
+    <div id="modalDebt" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+        <div class="glass-card w-full max-w-xl p-6 rounded-2xl border border-slate-700 relative my-8">
+            <button onclick="closeDebtModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-xl font-bold text-white mb-4">Cadastrar Financiamento / Dívida</h2>
+
+            <form onsubmit="handleDebtSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Tipo de Financiamento / Dívida</label>
+                    <select id="debtCategoryType" onchange="toggleDebtTypeFields()" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                        <option value="Veículo">Financiamento de Veículo (Carro / Moto)</option>
+                        <option value="Imóvel">Financiamento de Imóvel (Casa, Ap, Terreno)</option>
+                        <option value="Outros">Outras Dívidas / Cartão Crédito</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Nome de Identificação</label>
+                    <input type="text" id="debtName" required placeholder="Ex: Financiamento Fluo 125, Financiamento Ap. Centro" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <!-- SEÇÃO VEÍCULO (CARRO / MOTO / MARCA / MODELO / FIPE) -->
+                <div id="debtVehicleFields" class="p-4 rounded-xl bg-slate-800/60 border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="car" class="w-4 h-4"></i> Detalhes do Veículo & FIPE
+                    </h4>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Tipo Veículo</label>
+                            <select id="debtVehKind" onchange="onVehKindChange('debt')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="Carro">Carro</option>
+                                <option value="Moto" selected>Moto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Marca</label>
+                            <select id="debtVehBrand" onchange="onVehBrandChange('debt')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Modelo</label>
+                            <select id="debtVehModel" onchange="calculateFipeEstimate('debt')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Ano Modelo</label>
+                            <select id="debtVehYear" onchange="calculateFipeEstimate('debt')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Valor Estimado Tabela FIPE (R$)</label>
+                        <input type="number" step="0.01" id="debtVehFipe" placeholder="0,00" class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <!-- SEÇÃO IMÓVEL (CASA / APARTAMENTO / ENDEREÇO) -->
+                <div id="debtPropertyFields" class="hidden p-4 rounded-xl bg-slate-800/60 border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="building" class="w-4 h-4"></i> Detalhes do Imóvel
+                    </h4>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Tipo de Imóvel</label>
+                            <select id="debtPropSubtype" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="Casa">Casa</option>
+                                <option value="Apartamento">Apartamento</option>
+                                <option value="Terreno">Terreno</option>
+                                <option value="Ponto Comercial">Ponto Comercial / Sala</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Área (m²) / Quartos</label>
+                            <input type="text" id="debtPropSpecs" placeholder="Ex: 85m², 3 Quartos" class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Endereço Completo</label>
+                        <input type="text" id="debtPropAddress" placeholder="Rua, Bairro, Número, Cidade/UF" class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor Financiado / Total (R$)</label>
+                        <input type="number" step="0.01" id="debtTotal" required placeholder="15000" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor da Parcela (R$)</label>
+                        <input type="number" step="0.01" id="debtInstallmentVal" required placeholder="550" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Total de Parcelas</label>
+                        <input type="number" min="1" id="debtTotalInstallments" required placeholder="36" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Parcelas Faltantes</label>
+                        <input type="number" min="0" id="debtRemainingInstallments" required placeholder="24" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-500 font-bold text-white rounded-xl transition shadow-lg shadow-amber-600/30">
+                    Registrar Financiamento
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BENS PATRIMONIAIS -->
+    <div id="modalBem" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+        <div class="glass-card w-full max-w-xl p-6 rounded-2xl border border-slate-700 relative my-8">
+            <button onclick="closeBemModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-xl font-bold text-white mb-4">Cadastrar Bem / Patrimônio Físico Quitado</h2>
+
+            <form onsubmit="handleBemSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Tipo / Categoria do Bem</label>
+                    <select id="bemCategory" onchange="toggleBemFields()" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                        <option value="Veículo">Veículo Quitado (Carro / Moto)</option>
+                        <option value="Imóvel">Imóvel (Casa, Ap, Terreno)</option>
+                        <option value="Empresa">Empresa / Negócio</option>
+                        <option value="Obras de Arte & Relógios">Obras de Arte, Joias & Relógios</option>
+                        <option value="Equipamentos">Equipamentos / Maquinário</option>
+                        <option value="Outros">Outros Bens de Valor</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Nome / Descrição do Bem</label>
+                    <input type="text" id="bemName" required placeholder="Ex: Yamaha Fluo 125 ABS, Apartamento Beira Mar" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <!-- SEÇÃO VEÍCULO EM BENS -->
+                <div id="bemVehicleFields" class="p-4 rounded-xl bg-slate-800/60 border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="car" class="w-4 h-4"></i> Tabela FIPE & Veículo
+                    </h4>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Tipo Veículo</label>
+                            <select id="bemVehKind" onchange="onVehKindChange('bem')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="Carro">Carro</option>
+                                <option value="Moto" selected>Moto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Marca</label>
+                            <select id="bemVehBrand" onchange="onVehBrandChange('bem')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Modelo</label>
+                            <select id="bemVehModel" onchange="calculateFipeEstimate('bem')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Ano</label>
+                            <select id="bemVehYear" onchange="calculateFipeEstimate('bem')" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO IMÓVEL EM BENS -->
+                <div id="bemPropertyFields" class="hidden p-4 rounded-xl bg-slate-800/60 border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="building" class="w-4 h-4"></i> Endereço e Detalhes
+                    </h4>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Subtipo Imóvel</label>
+                            <select id="bemPropSubtype" class="w-full glass-input px-3 py-2 rounded-xl text-sm bg-slate-900 text-white">
+                                <option value="Casa">Casa</option>
+                                <option value="Apartamento">Apartamento</option>
+                                <option value="Terreno">Terreno</option>
+                                <option value="Ponto Comercial">Ponto Comercial / Sala</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Área / Especificações</label>
+                            <input type="text" id="bemPropSpecs" placeholder="Ex: 120m², 3 suítes" class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Endereço Completo</label>
+                        <input type="text" id="bemPropAddress" placeholder="Rua, Bairro, Número, Cidade/UF" class="w-full glass-input px-3 py-2 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor Atual Estimado (R$)</label>
+                        <input type="number" step="0.01" min="0.01" id="bemAmount" required placeholder="15800" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Métrica Anual (%)</label>
+                        <input type="number" step="0.1" id="bemRate" placeholder="+5 ou -8" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                        <span class="text-[10px] text-gray-400">Ex: +5% (Valorização) ou -8% (Desvalorização FIPE)</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold text-white rounded-xl transition shadow-lg shadow-indigo-600/30">
+                    Salvar Bem no Patrimônio
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE INVESTIMENTO -->
+    <div id="modalInvestment" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-card w-full max-w-lg p-6 rounded-2xl border border-slate-700 relative">
+            <button onclick="closeInvestmentModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-xl font-bold text-white mb-4">Cadastrar Novo Aporte / Ativo</h2>
+
+            <form onsubmit="handleInvestmentSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Nome do Ativo</label>
+                    <input type="text" id="invName" required placeholder="Ex: Tesouro Selic 2029, FII HGLG11, CDB 110%" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Categoria de Investimento</label>
+                    <select id="invCategory" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                        <option value="Reserva de Emergência">Reserva de Emergência</option>
+                        <option value="Renda Fixa">Renda Fixa (CDB, Tesouro, LCI/LCA)</option>
+                        <option value="Renda Variável">Renda Variável (Ações, FIIs, ETFs)</option>
+                        <option value="Criptomoedas">Criptomoedas</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor Aplicado (R$)</label>
+                    <input type="number" step="0.01" min="0.01" id="invAmount" required placeholder="1000" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-500 font-bold text-white rounded-xl transition shadow-lg shadow-sky-600/30">
+                    Salvar Aporte
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE METAS -->
+    <div id="modalMeta" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-card w-full max-w-lg p-6 rounded-2xl border border-slate-700 relative">
+            <button onclick="closeMetaModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-xl font-bold text-white mb-4">Cadastrar Nova Meta / Sonho</h2>
+
+            <form onsubmit="handleMetaSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Nome da Meta</label>
+                    <input type="text" id="metaName" required placeholder="Ex: Viagem de Férias, Reserva de Emergência" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor Alvo (R$)</label>
+                        <input type="number" step="0.01" min="1" id="metaTarget" required placeholder="10000" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Valor Já Guardado (R$)</label>
+                        <input type="number" step="0.01" min="0" id="metaCurrent" required placeholder="0" class="w-full glass-input px-3 py-2.5 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Prazo / Data Alvo</label>
+                    <input type="date" id="metaDeadline" required class="w-full glass-input px-3 py-2.5 rounded-xl text-sm bg-slate-900 text-white">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl transition shadow-lg shadow-emerald-600/30">
+                    Salvar Meta
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           CONFIGURAÇÃO DO SUPABASE
+           ========================================================================== */
+        const SUPABASE_URL = 'https://yjpqrmcxyzptsbfhrqor.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcHFybWN4eXpwdHNiZmhycW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5NjA0NzgsImV4cCI6MjEwNTUzNjQ3OH0.81QxsgqWpeGisfjaxyx3c0gAlRdSwRyqqgWvL8zU5QY';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        /* ==========================================================================
+           BASE DE DADOS COMPLETA DE VEÍCULOS (RODANDO NO BRASIL)
+           ========================================================================== */
+        const FIPE_VEHICLES = {
+            "Carro": {
+                "Chevrolet": {
+                    "Onix 1.0 Flex": 82000,
+                    "Onix Plus 1.0 Turbo": 94000,
+                    "Tracker Premier Turbo": 135000,
+                    "S10 High Country": 240000,
+                    "Cruze Sedan LTZ": 105000,
+                    "Montana RS": 118000,
+                    "Spin Activ 7L": 112000,
+                    "Equinox Midnight": 185000,
+                    "Camaro SS": 410000,
+                    "Blazer EV": 450000
+                },
+                "Volkswagen": {
+                    "Polo Highline TSI": 98000,
+                    "Polo Track 1.0": 78000,
+                    "Gol 1.0 Flex": 58000,
+                    "T-Cross Comfortline": 128000,
+                    "Nivus Highline": 122000,
+                    "Taos Highline": 175000,
+                    "Saveiro Robust Cabine Simples": 95000,
+                    "Amarok V6 Highline": 285000,
+                    "Virtus Exclusive": 134000,
+                    "Jetta GLI": 235000,
+                    "ID.4 Eletric": 320000
+                },
+                "Fiat": {
+                    "Strada Freedom Cab. Dupla": 102000,
+                    "Strada Volcano": 115000,
+                    "Toro Volcano Diesel 4x4": 155000,
+                    "Argo Drive 1.0": 72000,
+                    "Mobi Like 1.0": 54000,
+                    "Pulse Abarth": 145000,
+                    "Fastback Limited Edition": 152000,
+                    "Cronos Precision": 92000,
+                    "Fiorino Endurance": 110000,
+                    "Ducato Cargo": 245000,
+                    "Scudo Cargo": 195000,
+                    "Titano Ranch": 230000
+                },
+                "Toyota": {
+                    "Corolla XEi 2.0": 138000,
+                    "Corolla Altis Hybrid": 178000,
+                    "Hilux SRV 4x4 Diesel": 260000,
+                    "Hilux Conquest": 295000,
+                    "Yaris Hatch XLS": 92000,
+                    "Yaris Sedan XS": 96000,
+                    "Corolla Cross XRE": 165000,
+                    "Corolla Cross XRX Hybrid": 195000,
+                    "SW4 SRX Platinum": 375000,
+                    "RAV4 Hybrid": 345000,
+                    "Land Cruiser Prado": 580000,
+                    "Camry Hybrid": 330000
+                },
+                "Honda": {
+                    "Civic Touring Turbo": 145000,
+                    "Civic Híbrido e:HEV": 245000,
+                    "HR-V EXL 1.5 Flex": 139000,
+                    "HR-V Touring Turbo": 182000,
+                    "City Sedan EXL": 108000,
+                    "City Hatchback Touring": 118000,
+                    "Fit EXL 1.5": 78000,
+                    "ZR-V Touring": 210000,
+                    "CR-V Advanced Hybrid": 350000
+                },
+                "Hyundai": {
+                    "HB20 Platinum Turbo": 89000,
+                    "HB20S Limited": 95000,
+                    "Creta Ultimate 2.0": 148000,
+                    "Creta N Line": 168000,
+                    "Tucson GLS": 190000,
+                    "Kona Hybrid": 210000,
+                    "Ioniq 5": 350000,
+                    "Palisade": 440000
+                },
+                "Jeep": {
+                    "Renegade Longitude Flex": 115000,
+                    "Renegade Trailhawk 4x4": 172000,
+                    "Compass Longitude Diesel": 168000,
+                    "Compass Blackhawk Hurricane": 275000,
+                    "Commander Overland": 295000,
+                    "Wrangler Rubicon": 460000,
+                    "Grand Cherokee 4xe": 530000
+                },
+                "Renault": {
+                    "Kwid Zen 1.0": 68000,
+                    "Stepway Iconic": 92000,
+                    "Duster Iconic Plus": 135000,
+                    "Oroch Outsider": 138000,
+                    "Master Furgão": 245000,
+                    "Megane E-Tech": 279000,
+                    "Kardian Premiere Edition": 132000,
+                    "Scenic E-Tech": 350000
+                },
+                "Nissan": {
+                    "Kicks Exclusive": 132000,
+                    "Versa Exclusive": 118000,
+                    "Sentra Advance": 145000,
+                    "Frontier Pro-4X": 275000,
+                    "Leaf Eletric": 290000
+                },
+                "Ford": {
+                    "Ranger Limited V6": 325000,
+                    "Ranger Raptor": 445000,
+                    "Maverick Lariat FX4": 225000,
+                    "Mustang Mach-E": 420000,
+                    "Mustang GT Performance": 529000,
+                    "Territory Titanium": 215000,
+                    "Bronco Sport Wildtrak": 255000,
+                    "Transit Furgão": 240000
+                },
+                "Caoa Chery": {
+                    "Tiggo 5X Sport": 115000,
+                    "Tiggo 7 Pro Max Drive": 168000,
+                    "Tiggo 8 PRO Hybrid": 240000,
+                    "Arrizo 6 PRO Hybrid": 135000,
+                    "iCar Eletrico": 119000
+                },
+                "BYD": {
+                    "Dolphin GS": 114800,
+                    "Dolphin Mini": 115800,
+                    "Song Plus DM-i": 229800,
+                    "Seal EV": 296800,
+                    "Yuan Plus EV": 229800,
+                    "Han EV": 539800,
+                    "Tan EV": 539800,
+                    "Shark Hybrid": 298000
+                },
+                "GWM": {
+                    "Haval H6 Premium HEV": 214000,
+                    "Haval H6 PHEV 34": 279000,
+                    "Haval H6 GT PHEV": 319000,
+                    "Ora 03 Skin": 150000,
+                    "Ora 03 GT": 184000,
+                    "Poer 4x4 Diesel": 240000
+                },
+                "BMW": {
+                    "Série 3 320i M Sport": 320000,
+                    "X1 sDrive20i X-Line": 295000,
+                    "X3 xDrive30e": 420000,
+                    "X5 xDrive50e": 780000,
+                    "i4 M50": 530000,
+                    "iX xDrive40": 680000,
+                    "M3 Competition": 850000
+                },
+                "Mercedes-Benz": {
+                    "Classe C 300 AMG Line": 360000,
+                    "GLA 200 AMG Line": 330000,
+                    "GLC 300 4Matic": 450000,
+                    "GLE 450 d": 750000,
+                    "Sprinter Furgão": 285000,
+                    "EQE 300": 700000,
+                    "AMG G 63": 1850000
+                },
+                "Audi": {
+                    "A3 Sedan Performance Black": 285000,
+                    "Q3 Prestige Plus": 290000,
+                    "Q5 Performance Black": 420000,
+                    "e-tron GT": 750000,
+                    "RS6 Avant": 1150000
+                },
+                "Volvo": {
+                    "XC40 Recharge Plus": 330000,
+                    "XC60 Ultimate Recharge": 435000,
+                    "XC90 Ultimate Recharge": 580000,
+                    "EX30 Single Motor": 229000,
+                    "EX90": 850000
+                },
+                "Porsche": {
+                    "Macan T": 450000,
+                    "Cayenne E-Hybrid": 690000,
+                    "Panamera 4 E-Hybrid": 850000,
+                    "911 Carrera": 920000,
+                    "Taycan 4S": 780000
+                },
+                "Land Rover": {
+                    "Defender 110 P400": 720000,
+                    "Discovery Sport HSE": 440000,
+                    "Range Rover Evoque Dynamic": 430000,
+                    "Range Rover Sport HSE": 880000,
+                    "Range Rover Autobiography": 1250000
+                },
+                "Mitsubishi": {
+                    "L200 Triton Sport Outdoor": 245000,
+                    "Eclipse Cross HPE-S": 220000,
+                    "Pajero Sport HPE": 380000
+                },
+                "Ram": {
+                    "Ram Rampage Rebel Diesel": 245000,
+                    "Ram Rampage R/T": 269000,
+                    "Ram 1500 Rebel": 465000,
+                    "Ram 2500 Laramie": 530000,
+                    "Ram 3500 Longhorn": 570000
+                },
+                "Peugeot": {
+                    "208 Allure Turbo 200": 98000,
+                    "2008 Griffe Turbo": 125000,
+                    "3008 GT": 240000,
+                    "Expert Furgão": 195000,
+                    "Landtrek": 230000,
+                    "e-208 GT": 220000
+                },
+                "Citroën": {
+                    "C3 Live 1.0": 74000,
+                    "C3 Aircross Feel 7L": 112000,
+                    "Basalt Shine Turbo": 108000,
+                    "Jumpy Furgão": 190000
+                }
+            },
+            "Moto": {
+                "Yamaha": {
+                    "Fluo 125 ABS": 15800,
+                    "Factor 150 ED": 16500,
+                    "Fazer FZ25 250": 23200,
+                    "Crosser 150 ABS": 20800,
+                    "Lander 250 ABS": 25900,
+                    "NMAX 160 Connected": 21500,
+                    "Neo 125 UBS": 12800,
+                    "MT-03 ABS": 33500,
+                    "MT-07 ABS": 51000,
+                    "MT-09 ABS": 64000,
+                    "R3 ABS": 34800,
+                    "Tenere 700": 72000
+                },
+                "Honda": {
+                    "CG 160 Fan": 17800,
+                    "CG 160 Titan": 19500,
+                    "Biz 125 Flex": 16200,
+                    "CB 300F Twister": 23500,
+                    "XRE 190 ABS": 22400,
+                    "XRE 300 Sahara": 29800,
+                    "PCX 160 ABS": 19800,
+                    "Elite 125": 13500,
+                    "Bros 160 ES": 20500,
+                    "CB 500F": 42000,
+                    "CB 1000R Black Edition": 85000,
+                    "Africa Twin CRF 1100L": 95000,
+                    "CBR 650R": 54000
+                },
+                "BMW": {
+                    "G 310 GS": 38500,
+                    "G 310 R": 34500,
+                    "F 850 GS Premium": 72000,
+                    "F 900 GS": 79000,
+                    "R 1250 GS Adventure": 118000,
+                    "R 1300 GS": 128000,
+                    "S 1000 RR": 125000
+                },
+                "Kawasaki": {
+                    "Ninja 400 ABS": 35800,
+                    "Ninja 650": 48500,
+                    "Z400 ABS": 34800,
+                    "Z900 ABS": 62000,
+                    "Versys 650": 53000
+                },
+                "Royal Enfield": {
+                    "Hunter 350": 20900,
+                    "Meteor 350": 24800,
+                    "Classic 350": 25800,
+                    "Scram 411": 28500,
+                    "Himalayan 450": 34900,
+                    "Interceptor 650": 32800,
+                    "Continental GT 650": 34200,
+                    "Shotgun 650": 36500
+                },
+                "Suzuki": {
+                    "Burgman i 125": 13200,
+                    "GSX-S750": 58000,
+                    "V-Strom 650XT": 68000,
+                    "Hayabusa 1300": 125000
+                },
+                "Haojue": {
+                    "DK 150": 14500,
+                    "Master 150": 15800,
+                    "Chopper Road 150": 15200,
+                    "DK 160": 16500,
+                    "NXR 125": 13900
+                },
+                "Dafra": {
+                    "Citycom 300i": 26800,
+                    "Cruisym 300": 28500,
+                    "NH 300": 27900
+                },
+                "Triumph": {
+                    "Trident 660": 49900,
+                    "Tiger 900 GT Pro": 78000,
+                    "Tiger 1200 Explorer": 110000,
+                    "Speed Twin 900": 53000,
+                    "Bonneville T120": 62000
+                },
+                "KTM": {
+                    "Duke 200": 26900,
+                    "Duke 390": 39900,
+                    "390 Adventure": 48900
+                },
+                "Ducati": {
+                    "Monster 937": 79900,
+                    "Multistrada V2 S": 99900,
+                    "Panigale V2": 115000,
+                    "Diavel V4": 148000
+                }
+            }
+        };
+
+        const CATEGORIES_DATA = {
+            "Casa": ["Luz", "Água", "Internet", "Gás", "Aluguel / Condomínio", "Supermercado", "Manutenção", "Limpeza", "Decoração", "Feira"],
+            "Veículo": ["Gasolina / Combustível", "Manutenção Preventiva / Corretiva", "Pneu", "Seguro", "IPVA / Licenciamento", "Lavagem", "Estacionamento", "Pedágio", "Troca de Óleo"],
+            "Cartões": ["Fatura Nubank", "Fatura Itaú", "Fatura Bradesco", "Anuidade", "Outros Cartões"],
+            "Trabalho": ["Transporte / Uber", "Alimentação / Almoço", "Ferramentas / SaaS", "Impostos / MEI", "Cursos / Treinamentos", "Equipamentos"],
+            "Relacionamento": ["Encontros / Jantares", "Presentes", "Viagens", "Cinema / Entretenimento", "Passeios no Fim de Semana"],
+            "Saúde": ["Academia", "Suplementos", "Farmácia", "Consultas Médicas", "Roupas", "Barbeiro / Salão"],
+            "Pets": ["Ração / Alimentação", "Veterinário", "Vacinas & Remédios", "Banho e Tosa", "Brinquedos & Acessórios", "Outros Pets"],
+            "Comprinha (Casual / Avulso)": ["Roupa / Acessório", "Lazer / Fim de Semana", "Lanche / Comida fora", "Presente", "Tecnologia / Gadget", "Skincare / Perfume", "Outros (Impulso)"],
+            "Entrada": ["Salário / Pro-labore", "Rendimento / Dividendos", "Vendas / Freelance", "Reembolso", "Outras Receitas"]
+        };
+
+        let currentUser = null;
+        let isSignup = false;
+        let sidebarCollapsed = false;
+
+        // Estado inicial zerado para novas contas
+        let appState = {
+            transactions: [],
+            debts: [],
+            bens: [],
+            investments: [],
+            metas: []
+        };
+
+        let chartBarInstance = null;
+        let chartDoughnutInstance = null;
+
+        function populateVehBrands(prefix) {
+            const kindSelect = document.getElementById(`${prefix}VehKind`);
+            const brandSelect = document.getElementById(`${prefix}VehBrand`);
+            if (!kindSelect || !brandSelect) return;
+
+            const kind = kindSelect.value;
+            brandSelect.innerHTML = '';
+
+            const brands = Object.keys(FIPE_VEHICLES[kind] || {});
+            brands.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.innerText = b;
+                brandSelect.appendChild(opt);
+            });
+
+            populateVehModels(prefix);
+        }
+
+        function populateVehModels(prefix) {
+            const kindSelect = document.getElementById(`${prefix}VehKind`);
+            const brandSelect = document.getElementById(`${prefix}VehBrand`);
+            const modelSelect = document.getElementById(`${prefix}VehModel`);
+            if (!kindSelect || !brandSelect || !modelSelect) return;
+
+            const kind = kindSelect.value;
+            const brand = brandSelect.value;
+            modelSelect.innerHTML = '';
+
+            const models = Object.keys((FIPE_VEHICLES[kind] && FIPE_VEHICLES[kind][brand]) || {});
+            models.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.innerText = m;
+                modelSelect.appendChild(opt);
+            });
+
+            calculateFipeEstimate(prefix);
+        }
+
+        function onVehKindChange(prefix) {
+            populateVehBrands(prefix);
+        }
+
+        function onVehBrandChange(prefix) {
+            populateVehModels(prefix);
+        }
+
+        function calculateFipeEstimate(prefix) {
+            const kindSelect = document.getElementById(`${prefix}VehKind`);
+            const brandSelect = document.getElementById(`${prefix}VehBrand`);
+            const modelSelect = document.getElementById(`${prefix}VehModel`);
+            const yearSelect = document.getElementById(`${prefix}VehYear`);
+            const fipeInput = document.getElementById(`${prefix}VehFipe`);
+            const amountInput = document.getElementById(`${prefix}Amount`);
+
+            if (!kindSelect || !brandSelect || !modelSelect) return;
+
+            const kind = kindSelect.value;
+            const brand = brandSelect.value;
+            const model = modelSelect.value;
+            const year = parseInt(yearSelect ? yearSelect.value : "2026");
+
+            let baseVal = (FIPE_VEHICLES[kind] && FIPE_VEHICLES[kind][brand] && FIPE_VEHICLES[kind][brand][model]) || 50000;
+            
+            const yearDiff = 2026 - year;
+            const estimatedFipe = Math.round(baseVal * Math.pow(0.95, yearDiff));
+
+            if (fipeInput) fipeInput.value = estimatedFipe;
+            if (amountInput && prefix === 'bem' && !amountInput.value) amountInput.value = estimatedFipe;
+        }
+
+        function toggleDebtTypeFields() {
+            const type = document.getElementById('debtCategoryType').value;
+            const vehFields = document.getElementById('debtVehicleFields');
+            const propFields = document.getElementById('debtPropertyFields');
+
+            if (type === 'Veículo') {
+                vehFields.classList.remove('hidden');
+                propFields.classList.add('hidden');
+                populateVehBrands('debt');
+            } else if (type === 'Imóvel') {
+                vehFields.classList.add('hidden');
+                propFields.classList.remove('hidden');
+            } else {
+                vehFields.classList.add('hidden');
+                propFields.classList.add('hidden');
+            }
+        }
+
+        function toggleBemFields() {
+            const cat = document.getElementById('bemCategory').value;
+            const vehFields = document.getElementById('bemVehicleFields');
+            const propFields = document.getElementById('bemPropertyFields');
+            const rateInput = document.getElementById('bemRate');
+
+            if (cat === 'Veículo') {
+                vehFields.classList.remove('hidden');
+                propFields.classList.add('hidden');
+                if (rateInput && !rateInput.value) rateInput.value = "-7.5";
+                populateVehBrands('bem');
+            } else if (cat === 'Imóvel') {
+                vehFields.classList.add('hidden');
+                propFields.classList.remove('hidden');
+                if (rateInput && !rateInput.value) rateInput.value = "6.0";
+            } else {
+                vehFields.classList.add('hidden');
+                propFields.classList.add('hidden');
+            }
+        }
+
+        function toggleDesktopSidebar() {
+            const sidebar = document.getElementById('desktopSidebar');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+            sidebarCollapsed = !sidebarCollapsed;
+
+            if (sidebarCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+                toggleIcon.setAttribute('data-lucide', 'panel-left-open');
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
+                toggleIcon.setAttribute('data-lucide', 'panel-left-close');
+            }
+            lucide.createIcons();
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileNavMenu').classList.toggle('hidden');
+        }
+
+        window.onload = async function() {
+            lucide.createIcons();
+            const savedUser = localStorage.getItem('nos_trilhos_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                await loadUserDataFromSupabase();
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                initDashboard();
+            } else {
+                document.getElementById('authContainer').classList.remove('hidden');
+            }
+
+            document.getElementById('quickDate').valueAsDate = new Date();
+            populateVehBrands('debt');
+            populateVehBrands('bem');
+        };
+
+        function toggleAuthMode() {
+            isSignup = !isSignup;
+            const subtitle = document.getElementById('authSubtitle');
+            const submitBtn = document.getElementById('btnAuthSubmit');
+            const toggleText = document.getElementById('authToggleText');
+            const btnToggle = document.getElementById('btnToggleAuth');
+            const fieldName = document.getElementById('fieldNameContainer');
+            const fieldAge = document.getElementById('fieldAgeContainer');
+
+            if (isSignup) {
+                subtitle.innerText = "Crie sua conta para manter suas finanças nos trilhos";
+                submitBtn.querySelector('span').innerText = "Cadastrar";
+                toggleText.innerText = "Já possui uma conta?";
+                btnToggle.innerText = "Entrar";
+                fieldName.classList.remove('hidden');
+                fieldAge.classList.remove('hidden');
+            } else {
+                subtitle.innerText = "Acesse sua conta para manter suas finanças nos trilhos";
+                submitBtn.querySelector('span').innerText = "Entrar";
+                toggleText.innerText = "Ainda não possui uma conta?";
+                btnToggle.innerText = "Cadastrar-se";
+                fieldName.classList.add('hidden');
+                fieldAge.classList.add('hidden');
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (isSignup) {
+                const name = document.getElementById('authName').value.trim() || "Usuário";
+                const age = parseInt(document.getElementById('authAge').value) || 28;
+
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { name, age }
+                    }
+                });
+
+                if (authError) {
+                    alert('Erro ao cadastrar: ' + authError.message);
+                    return;
+                }
+
+                currentUser = { name, email, age, id: authData.user?.id };
+                appState = { transactions: [], debts: [], bens: [], investments: [], metas: [] };
+                localStorage.setItem('nos_trilhos_user', JSON.stringify(currentUser));
+                await saveUserDataToSupabase();
+                alert('Conta criada com sucesso no Supabase!');
+            } else {
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (authError) {
+                    alert('E-mail ou senha incorretos: ' + authError.message);
+                    return;
+                }
+
+                const userMeta = authData.user.user_metadata || {};
+                currentUser = { 
+                    name: userMeta.name || "Usuário", 
+                    email: authData.user.email, 
+                    age: userMeta.age || 28,
+                    id: authData.user.id 
+                };
+                localStorage.setItem('nos_trilhos_user', JSON.stringify(currentUser));
+                await loadUserDataFromSupabase();
+            }
+
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            loadUserData();
+            initDashboard();
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            localStorage.removeItem('nos_trilhos_user');
+            currentUser = null;
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('authContainer').classList.remove('hidden');
+        }
+
+        async function saveUserDataToSupabase() {
+            if (!currentUser) return;
+            const payload = {
+                user_email: currentUser.email,
+                app_state: appState,
+                updated_at: new Date()
+            };
+
+            // Tenta atualizar ou inserir na tabela 'user_profiles' (certifique-se de criá-la no Supabase)
+            const { error } = await supabaseClient
+                .from('user_profiles')
+                .upsert(payload, { onConflict: 'user_email' });
+
+            if (error) {
+                console.error('Erro ao salvar dados no Supabase:', error.message);
+            }
+        }
+
+        async function loadUserDataFromSupabase() {
+            if (!currentUser) return;
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('app_state')
+                .eq('user_email', currentUser.email)
+                .single();
+
+            if (data && data.app_state) {
+                appState = data.app_state;
+                if (!appState.metas) appState.metas = [];
+                if (!appState.debts) appState.debts = [];
+                if (!appState.bens) appState.bens = [];
+                if (!appState.investments) appState.investments = [];
+                if (!appState.transactions) appState.transactions = [];
+            }
+        }
+
+        function loadUserData() {
+            if (!currentUser) return;
+            document.getElementById('userName').innerText = currentUser.name;
+            document.getElementById('userAvatar').innerText = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('userAgeBadge').innerText = `Idade: ${currentUser.age} anos`;
+            document.getElementById('recAgeBadge').innerText = `Idade: ${currentUser.age} anos`;
+            updateAgeRecommendations(currentUser.age);
+        }
+
+        function updateAgeRecommendations(age) {
+            const titleEl = document.getElementById('recTitle');
+            const descEl = document.getElementById('recDesc');
+
+            if (age < 25) {
+                titleEl.innerText = "Foco em Crescimento Acelerado & Formação de Reserva";
+                descEl.innerText = "Construa sua Reserva de Emergência inicial e aproveite o tempo em Renda Variável com foco no longo prazo.";
+            } else if (age >= 25 && age <= 40) {
+                titleEl.innerText = "Equilíbrio & Multiplicação de Patrimônio";
+                descEl.innerText = "Diversificação balanceada: 50% Renda Fixa, 40% Renda Variável (FIIs e Ações) e reserva estratégica de imprevistos.";
+            } else if (age >= 41 && age <= 60) {
+                titleEl.innerText = "Proteção Patrimonial & Geração de Renda Passiva";
+                descEl.innerText = "Priorize segurança financeira, Fundos Imobiliários e ativos pagadores de dividendos recorrentes.";
+            } else {
+                titleEl.innerText = "Preservação de Capital & Liquidez";
+                descEl.innerText = "Foco total em liquidez diária e Renda Fixa de baixo risco para usufruir de estabilidade e sossego.";
+            }
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'extrato', 'dividas', 'investimentos', 'metas', 'nivel'];
+            tabs.forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+                const tabSec = document.getElementById(`tab-${t}`);
+
+                if (t === tabName) {
+                    if (navBtn) navBtn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition bg-emerald-600/20 text-emerald-300 border border-emerald-500/30";
+                    if (tabSec) tabSec.classList.remove('hidden');
+                } else {
+                    if (navBtn) navBtn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-slate-800/60";
+                    if (tabSec) tabSec.classList.add('hidden');
+                }
+            });
+
+            if (tabName === 'dashboard') updateDashboardSummary();
+            if (tabName === 'extrato') { renderExtratoTable(); renderCategoriasGastos(); renderEntradasView(); }
+            if (tabName === 'dividas') renderDividas();
+            if (tabName === 'investimentos') { renderInvestimentos(); renderBens(); }
+            if (tabName === 'metas') renderMetas();
+            if (tabName === 'nivel') renderNivelSystem();
+        }
+
+        function initDashboard() {
+            updateDashboardSummary();
+            renderCharts();
+            renderRecentTransactions();
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+        }
+
+        function updateDashboardSummary() {
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+
+            appState.transactions.forEach(t => {
+                if (t.type === 'entrada') totalEntradas += t.amount;
+                if (t.type === 'saida') totalSaidas += t.amount;
+            });
+
+            const saldo = totalEntradas - totalSaidas;
+            let totalBens = appState.bens.reduce((sum, item) => sum + item.amount, 0);
+            let totalInvestido = appState.investments.reduce((sum, item) => sum + item.amount, 0);
+            let totalDividas = appState.debts.reduce((sum, item) => sum + (item.installmentVal * item.remainingInstallments), 0);
+
+            document.getElementById('dashSaldo').innerText = formatCurrency(saldo);
+            document.getElementById('dashEntradas').innerText = formatCurrency(totalEntradas);
+            document.getElementById('dashSaidas').innerText = formatCurrency(totalSaidas);
+            document.getElementById('dashBens').innerText = formatCurrency(totalBens);
+            document.getElementById('dashInvestido').innerText = formatCurrency(totalInvestido);
+            document.getElementById('dashDividas').innerText = formatCurrency(totalDividas);
+
+            renderRecentTransactions();
+            if (chartBarInstance && chartDoughnutInstance) updateChartsData(totalEntradas, totalSaidas);
+        }
+
+        function renderRecentTransactions() {
+            const tableBody = document.getElementById('dashRecentTable');
+            tableBody.innerHTML = '';
+
+            const recent = [...appState.transactions].reverse().slice(0, 5);
+            if (recent.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma movimentação registrada.</td></tr>';
+                return;
+            }
+
+            recent.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+                
+                const isEntrada = t.type === 'entrada';
+                const badgeClass = isEntrada ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-rose-500/10 text-rose-400 border-rose-500/30";
+                const badgeText = isEntrada ? "Entrada" : "Saída";
+                const valColor = isEntrada ? "text-emerald-400" : "text-rose-400";
+                const valSign = isEntrada ? "+" : "-";
+
+                tr.innerHTML = `
+                    <td class="p-3"><span class="px-2.5 py-1 text-xs rounded-full border ${badgeClass} font-medium">${badgeText}</span></td>
+                    <td class="p-3 font-medium text-white">${t.desc || t.razão}</td>
+                    <td class="p-3 text-gray-400">${t.category}</td>
+                    <td class="p-3 text-gray-400 text-xs">${t.date}</td>
+                    <td class="p-3 text-right font-bold ${valColor}">${valSign} ${formatCurrency(t.amount)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function renderCharts() {
+    // Destrói o gráfico de barras anterior se já existir
+    if (chartBarInstance) {
+        chartBarInstance.destroy();
+    }
+    // Destrói o gráfico de rosca anterior se já existir
+    if (chartDoughnutInstance) {
+        chartDoughnutInstance.destroy();
+    }
+
+    const ctxBar = document.getElementById('chartBarFlow').getContext('2d');
+    chartBarInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: ['Entradas / Receitas', 'Gastos / Saídas'],
+            datasets: [{
+                data: [
+                    appState.transactions.filter(t=>t.type==='entrada').reduce((a,b)=>a+b.amount,0),
+                    appState.transactions.filter(t=>t.type==='saida').reduce((a,b)=>a+b.amount,0)
+                ],
+                backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(244, 63, 94, 0.8)'],
+                borderColor: ['#22c55e', '#f43f5e'],
+                borderWidth: 1.5,
+                borderRadius: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { color: '#9ca3af' }, grid: { color: '#1e293b' } },
+                x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+            }
+        }
+    });
+
+    const categoriesMap = {};
+    appState.transactions.filter(t => t.type === 'saida').forEach(t => {
+        categoriesMap[t.category] = (categoriesMap[t.category] || 0) + t.amount;
+    });
+
+    const ctxDoughnut = document.getElementById('chartDoughnutCategories').getContext('2d');
+    chartDoughnutInstance = new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(categoriesMap).length ? Object.keys(categoriesMap) : ['Sem Gastos'],
+            datasets: [{
+                data: Object.keys(categoriesMap).length ? Object.values(categoriesMap) : [1],
+                backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#64748b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', boxWidth: 12 } } }
+        }
+    });
+}
+
+        function updateChartsData(totalEntradas, totalSaidas) {
+            if (chartBarInstance) {
+                chartBarInstance.data.datasets[0].data = [totalEntradas, totalSaidas];
+                chartBarInstance.update();
+            }
+
+            if (chartDoughnutInstance) {
+                const categoriesMap = {};
+                appState.transactions.filter(t => t.type === 'saida').forEach(t => {
+                    categoriesMap[t.category] = (categoriesMap[t.category] || 0) + t.amount;
+                });
+
+                chartDoughnutInstance.data.labels = Object.keys(categoriesMap).length ? Object.keys(categoriesMap) : ['Sem Gastos'];
+                chartDoughnutInstance.data.datasets[0].data = Object.keys(categoriesMap).length ? Object.values(categoriesMap) : [1];
+                chartDoughnutInstance.update();
+            }
+        }
+
+        function openQuickModal(type) {
+            document.getElementById('quickType').value = type;
+            document.getElementById('quickModalTitle').innerText = type === 'entrada' ? 'Cadastrar Entrada / Receita' : 'Cadastrar Gasto / Saída';
+            document.getElementById('quickSubmitBtn').className = type === 'entrada' 
+                ? 'w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl transition shadow-lg shadow-emerald-600/30'
+                : 'w-full py-3 bg-rose-600 hover:bg-rose-500 font-bold text-white rounded-xl transition shadow-lg shadow-rose-600/30';
+            
+            const categorySelect = document.getElementById('quickCategory');
+            if (type === 'entrada') {
+                categorySelect.value = 'Entrada';
+                categorySelect.disabled = true;
+            } else {
+                categorySelect.value = 'Casa';
+                categorySelect.disabled = false;
+            }
+            updateRazaoOptions();
+            document.getElementById('modalQuick').classList.remove('hidden');
+        }
+
+        function closeQuickModal() {
+            document.getElementById('modalQuick').classList.add('hidden');
+        }
+
+        function updateRazaoOptions() {
+            const cat = document.getElementById('quickCategory').value;
+            const razaoSelect = document.getElementById('quickRazao');
+            razaoSelect.innerHTML = '';
+
+            const sublist = CATEGORIES_DATA[cat] || ['Outros'];
+            sublist.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.innerText = sub;
+                razaoSelect.appendChild(opt);
+            });
+        }
+
+        async function handleQuickSubmit(e) {
+            e.preventDefault();
+            const type = document.getElementById('quickType').value;
+            const category = document.getElementById('quickCategory').value;
+            const razão = document.getElementById('quickRazao').value;
+            const desc = document.getElementById('quickDescription').value.trim();
+            const amount = parseFloat(document.getElementById('quickAmount').value);
+            const date = document.getElementById('quickDate').value;
+
+            const newTx = { id: Date.now(), type, category, razão, desc, amount, date };
+            appState.transactions.push(newTx);
+
+            await saveUserDataToSupabase();
+            closeQuickModal();
+            initDashboard();
+        }
+
+        function openDebtModal() {
+            document.getElementById('modalDebt').classList.remove('hidden');
+            toggleDebtTypeFields();
+        }
+
+        function closeDebtModal() {
+            document.getElementById('modalDebt').classList.add('hidden');
+        }
+
+        async function handleDebtSubmit(e) {
+            e.preventDefault();
+            const type = document.getElementById('debtCategoryType').value;
+            const name = document.getElementById('debtName').value.trim();
+            const total = parseFloat(document.getElementById('debtTotal').value);
+            const installmentVal = parseFloat(document.getElementById('debtInstallmentVal').value);
+            const totalInstallments = parseInt(document.getElementById('debtTotalInstallments').value);
+            const remainingInstallments = parseInt(document.getElementById('debtRemainingInstallments').value);
+
+            let extraDetails = {};
+            if (type === 'Veículo') {
+                extraDetails.kind = document.getElementById('debtVehKind').value;
+                extraDetails.brand = document.getElementById('debtVehBrand').value;
+                extraDetails.model = document.getElementById('debtVehModel').value;
+                extraDetails.year = document.getElementById('debtVehYear').value;
+                extraDetails.fipe = parseFloat(document.getElementById('debtVehFipe').value) || 0;
+            } else if (type === 'Imóvel') {
+                extraDetails.subtype = document.getElementById('debtPropSubtype').value;
+                extraDetails.specs = document.getElementById('debtPropSpecs').value;
+                extraDetails.address = document.getElementById('debtPropAddress').value;
+            }
+
+            const newDebt = {
+                id: Date.now(),
+                type,
+                name,
+                total,
+                installmentVal,
+                totalInstallments,
+                remainingInstallments,
+                extraDetails
+            };
+
+            appState.debts.push(newDebt);
+            await saveUserDataToSupabase();
+            closeDebtModal();
+            renderDividas();
+            updateDashboardSummary();
+        }
+
+        function renderDividas() {
+            const grid = document.getElementById('dividasGrid');
+            grid.innerHTML = '';
+
+            if (appState.debts.length === 0) {
+                grid.innerHTML = '<div class="col-span-full glass-card p-8 rounded-2xl text-center text-gray-400">Nenhum financiamento ou dívida cadastrada.</div>';
+                return;
+            }
+
+            appState.debts.forEach(d => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between";
+                
+                const paid = d.totalInstallments - d.remainingInstallments;
+                const pct = Math.round((paid / d.totalInstallments) * 100);
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs uppercase px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">${d.type}</span>
+                            <span class="text-xs text-gray-400">${d.remainingInstallments} parcelas restantes</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-1">${d.name}</h3>
+                        <p class="text-sm text-gray-300">Parcela: <strong class="text-amber-400">${formatCurrency(d.installmentVal)}</strong></p>
+                    </div>
+
+                    <div class="my-4 space-y-1">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>Progresso de Quitação</span>
+                            <span>${pct}%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-3 border-t border-slate-800">
+                        <button onclick="payInstallment(${d.id})" class="flex-1 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-semibold rounded-xl transition">
+                            Pagar Parcela
+                        </button>
+                        <button onclick="removeDebt(${d.id})" class="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        async function payInstallment(id) {
+            const debt = appState.debts.find(d => d.id === id);
+            if (!debt) return;
+
+            if (debt.remainingInstallments <= 0) {
+                alert('Este financiamento já está totalmente quitado!');
+                return;
+            }
+
+            debt.remainingInstallments--;
+
+            // Registra a saída automaticamente no extrato
+            appState.transactions.push({
+                id: Date.now(),
+                type: 'saida',
+                category: debt.type === 'Veículo' ? 'Veículo' : 'Casa',
+                razão: 'Parcela de Financiamento',
+                desc: `Pagamento parcela ${debt.name}`,
+                amount: debt.installmentVal,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            // Se quitou totalmente, migra automaticamente para Meus Bens!
+            if (debt.remainingInstallments === 0) {
+                alert(`Parabéns! O financiamento "${debt.name}" foi totalmente quitado e migrado automaticamente para "Meus Bens"!`);
+                
+                let bemAmount = debt.total;
+                let bemCategory = debt.type === 'Veículo' ? 'Veículo' : 'Imóvel';
+                
+                if (debt.extraDetails && debt.extraDetails.fipe) {
+                    bemAmount = debt.extraDetails.fipe;
+                }
+
+                appState.bens.push({
+                    id: Date.now() + 1,
+                    name: debt.name,
+                    category: bemCategory,
+                    amount: bemAmount,
+                    rate: bemCategory === 'Veículo' ? -7.5 : 5.0,
+                    extraDetails: debt.extraDetails || {}
+                });
+            }
+
+            await saveUserDataToSupabase();
+            renderDividas();
+            updateDashboardSummary();
+        }
+
+        async function removeDebt(id) {
+            appState.debts = appState.debts.filter(d => d.id !== id);
+            await saveUserDataToSupabase();
+            renderDividas();
+            updateDashboardSummary();
+        }
+
+        function openBemModal() {
+            document.getElementById('modalBem').classList.remove('hidden');
+            toggleBemFields();
+        }
+
+        function closeBemModal() {
+            document.getElementById('modalBem').classList.add('hidden');
+        }
+
+        async function handleBemSubmit(e) {
+            e.preventDefault();
+            const category = document.getElementById('bemCategory').value;
+            const name = document.getElementById('bemName').value.trim();
+            const amount = parseFloat(document.getElementById('bemAmount').value);
+            const rate = parseFloat(document.getElementById('bemRate').value) || 0;
+
+            let extraDetails = {};
+            if (category === 'Veículo') {
+                extraDetails.kind = document.getElementById('bemVehKind').value;
+                extraDetails.brand = document.getElementById('bemVehBrand').value;
+                extraDetails.model = document.getElementById('bemVehModel').value;
+                extraDetails.year = document.getElementById('bemVehYear').value;
+            } else if (category === 'Imóvel') {
+                extraDetails.subtype = document.getElementById('bemPropSubtype').value;
+                extraDetails.specs = document.getElementById('bemPropSpecs').value;
+                extraDetails.address = document.getElementById('bemPropAddress').value;
+            }
+
+            appState.bens.push({ id: Date.now(), category, name, amount, rate, extraDetails });
+            await saveUserDataToSupabase();
+            closeBemModal();
+            renderBens();
+            updateDashboardSummary();
+        }
+
+        function renderBens() {
+            const tbody = document.getElementById('bensTable');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            if (appState.bens.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum bem patrimonial cadastrado.</td></tr>';
+                document.getElementById('bensTotalVal').innerText = formatCurrency(0);
+                return;
+            }
+
+            appState.bens.forEach(b => {
+                total += b.amount;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+
+                let detailsText = b.name;
+                if (b.extraDetails && b.extraDetails.address) {
+                    detailsText += `<br><span class="text-xs text-gray-400">${b.extraDetails.address}</span>`;
+                } else if (b.extraDetails && b.extraDetails.model) {
+                    detailsText += `<br><span class="text-xs text-gray-400">${b.extraDetails.brand} ${b.extraDetails.model} (${b.extraDetails.year})</span>`;
+                }
+
+                const rateColor = b.rate >= 0 ? "text-emerald-400" : "text-rose-400";
+                const rateSign = b.rate > 0 ? "+" : "";
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-white">${detailsText}</td>
+                    <td class="p-3 text-gray-400">${b.category}</td>
+                    <td class="p-3 text-center text-xs text-gray-300">Tabela FIPE / Mercado</td>
+                    <td class="p-3 text-center font-bold ${rateColor}">${rateSign}${b.rate}% a.a.</td>
+                    <td class="p-3 text-right font-bold text-indigo-400">${formatCurrency(b.amount)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removeBem(${b.id})" class="p-1.5 text-gray-400 hover:text-rose-400 rounded-lg transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('bensTotalVal').innerText = `Total: ${formatCurrency(total)}`;
+            lucide.createIcons();
+        }
+
+        async function removeBem(id) {
+            appState.bens = appState.bens.filter(b => b.id !== id);
+            await saveUserDataToSupabase();
+            renderBens();
+            updateDashboardSummary();
+        }
+
+        function openInvestmentModal() {
+            document.getElementById('modalInvestment').classList.remove('hidden');
+        }
+
+        function closeInvestmentModal() {
+            document.getElementById('modalInvestment').classList.add('hidden');
+        }
+
+        async function handleInvestmentSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('invName').value.trim();
+            const category = document.getElementById('invCategory').value;
+            const amount = parseFloat(document.getElementById('invAmount').value);
+
+            appState.investments.push({ id: Date.now(), name, category, amount });
+            await saveUserDataToSupabase();
+            closeInvestmentModal();
+            renderInvestimentos();
+            updateDashboardSummary();
+        }
+
+        function renderInvestimentos() {
+            const tbody = document.getElementById('investmentsTable');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            if (appState.investments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhum aporte financeiro cadastrado.</td></tr>';
+                document.getElementById('investimentosTotalVal').innerText = formatCurrency(0);
+                return;
+            }
+
+            appState.investments.forEach(inv => {
+                total += inv.amount;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-white">${inv.name}</td>
+                    <td class="p-3 text-gray-400">${inv.category}</td>
+                    <td class="p-3 text-right font-bold text-sky-400">${formatCurrency(inv.amount)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removeInvestment(${inv.id})" class="p-1.5 text-gray-400 hover:text-rose-400 rounded-lg transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('investimentosTotalVal').innerText = `Total: ${formatCurrency(total)}`;
+            lucide.createIcons();
+        }
+
+        async function removeInvestment(id) {
+            appState.investments = appState.investments.filter(i => i.id !== id);
+            await saveUserDataToSupabase();
+            renderInvestimentos();
+            updateDashboardSummary();
+        }
+
+        function openMetaModal() {
+            document.getElementById('modalMeta').classList.remove('hidden');
+        }
+
+        function closeMetaModal() {
+            document.getElementById('modalMeta').classList.add('hidden');
+        }
+
+        async function handleMetaSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('metaName').value.trim();
+            const target = parseFloat(document.getElementById('metaTarget').value);
+            const current = parseFloat(document.getElementById('metaCurrent').value);
+            const deadline = document.getElementById('metaDeadline').value;
+
+            appState.metas.push({ id: Date.now(), name, target, current, deadline });
+            await saveUserDataToSupabase();
+            closeMetaModal();
+            renderMetas();
+        }
+
+        function renderMetas() {
+            const grid = document.getElementById('metasGrid');
+            grid.innerHTML = '';
+
+            if (appState.metas.length === 0) {
+                grid.innerHTML = '<div class="col-span-full glass-card p-8 rounded-2xl text-center text-gray-400">Nenhuma meta cadastrada. Defina seus objetivos!</div>';
+                return;
+            }
+
+            appState.metas.forEach(m => {
+                const pct = Math.min(100, Math.round((m.current / m.target) * 100));
+                const card = document.createElement('div');
+                card.className = "glass-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">Meta de Vida</span>
+                            <span class="text-xs text-gray-400">Prazo: ${m.deadline}</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">${m.name}</h3>
+                        <div class="flex justify-between text-sm text-gray-300 mb-1">
+                            <span>Guardado: <strong class="text-emerald-400">${formatCurrency(m.current)}</strong></span>
+                            <span>Alvo: ${formatCurrency(m.target)}</span>
+                        </div>
+                    </div>
+
+                    <div class="my-4 space-y-1">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>Progresso</span>
+                            <span>${pct}%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-3 border-t border-slate-800">
+                        <button onclick="addMetaProgress(${m.id})" class="flex-1 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition">
+                            + Adicionar Valor
+                        </button>
+                        <button onclick="removeMeta(${m.id})" class="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        async function addMetaProgress(id) {
+            const meta = appState.metas.find(m => m.id === id);
+            if (!meta) return;
+
+            const valStr = prompt(`Quanto deseja adicionar à meta "${meta.name}"? (R$)`);
+            if (!valStr) return;
+            const val = parseFloat(valStr);
+            if (isNaN(val) || val <= 0) return;
+
+            meta.current += val;
+            await saveUserDataToSupabase();
+            renderMetas();
+        }
+
+        async function removeMeta(id) {
+            appState.metas = appState.metas.filter(m => m.id !== id);
+            await saveUserDataToSupabase();
+            renderMetas();
+        }
+
+        function switchExtratoSubTab(sub) {
+            ['geral', 'categorias', 'entradas'].forEach(s => {
+                const btn = document.getElementById(`subnav-${s}`);
+                const sec = document.getElementById(`extrato-view-${s}`);
+                if (s === sub) {
+                    btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 whitespace-nowrap";
+                    sec.classList.remove('hidden');
+                } else {
+                    btn.className = "px-4 py-2.5 text-sm font-semibold text-gray-400 hover:text-white border-b-2 border-transparent whitespace-nowrap";
+                    sec.classList.add('hidden');
+                }
+            });
+
+            if (sub === 'geral') renderExtratoTable();
+            if (sub === 'categorias') renderCategoriasGastos();
+            if (sub === 'entradas') renderEntradasView();
+        }
+
+        function renderExtratoTable() {
+            const tbody = document.getElementById('extratoFullTable');
+            tbody.innerHTML = '';
+
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            const catFilter = document.getElementById('filterCategory').value;
+
+            const filtered = appState.transactions.filter(t => {
+                const matchSearch = (t.desc && t.desc.toLowerCase().includes(search)) || t.razão.toLowerCase().includes(search);
+                const matchCat = catFilter === 'todos' || t.category === catFilter;
+                return matchSearch && matchCat;
+            }).reverse();
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhuma transação encontrada.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+
+                const isEntrada = t.type === 'entrada';
+                const badgeClass = isEntrada ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-rose-500/10 text-rose-400 border-rose-500/30";
+                const badgeText = isEntrada ? "Entrada" : "Saída";
+                const valColor = isEntrada ? "text-emerald-400" : "text-rose-400";
+                const valSign = isEntrada ? "+" : "-";
+
+                tr.innerHTML = `
+                    <td class="p-3"><span class="px-2.5 py-1 text-xs rounded-full border ${badgeClass} font-medium">${badgeText}</span></td>
+                    <td class="p-3 text-gray-300 font-medium">${t.category}</td>
+                    <td class="p-3 text-white">${t.desc || t.razão}</td>
+                    <td class="p-3 text-gray-400 text-xs">${t.date}</td>
+                    <td class="p-3 text-right font-bold ${valColor}">${valSign} ${formatCurrency(t.amount)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removeTransaction(${t.id})" class="p-1.5 text-gray-400 hover:text-rose-400 rounded-lg transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        async function removeTransaction(id) {
+            appState.transactions = appState.transactions.filter(t => t.id !== id);
+            await saveUserDataToSupabase();
+            renderExtratoTable();
+            updateDashboardSummary();
+        }
+
+        function renderCategoriasGastos() {
+            const container = document.getElementById('categoryCardsContainer');
+            container.innerHTML = '';
+
+            const categoriesMap = {};
+            appState.transactions.filter(t => t.type === 'saida').forEach(t => {
+                categoriesMap[t.category] = (categoriesMap[t.category] || 0) + t.amount;
+            });
+
+            const keys = Object.keys(categoriesMap);
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="col-span-full glass-card p-8 rounded-2xl text-center text-gray-400">Nenhum gasto por categoria registrado.</div>';
+                return;
+            }
+
+            keys.forEach(cat => {
+                const total = categoriesMap[cat];
+                const card = document.createElement('div');
+                card.className = "glass-card p-6 rounded-2xl border border-slate-800";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-white text-base">${cat}</h3>
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">Gastos</span>
+                    </div>
+                    <p class="text-2xl font-black text-rose-400 mb-2">${formatCurrency(total)}</p>
+                    <p class="text-xs text-gray-400">Total acumulado na categoria</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderEntradasView() {
+            const tbody = document.getElementById('entradasTable');
+            tbody.innerHTML = '';
+
+            const entradas = appState.transactions.filter(t => t.type === 'entrada').reverse();
+            let total = 0;
+
+            if (entradas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma entrada registrada.</td></tr>';
+                document.getElementById('entradasTotalVal').innerText = formatCurrency(0);
+                return;
+            }
+
+            entradas.forEach(t => {
+                total += t.amount;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-white">${t.razão}</td>
+                    <td class="p-3 text-gray-400">${t.desc || 'Recebimento geral'}</td>
+                    <td class="p-3 text-gray-400 text-xs">${t.date}</td>
+                    <td class="p-3 text-right font-bold text-emerald-400">+ ${formatCurrency(t.amount)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('entradasTotalVal').innerText = formatCurrency(total);
+        }
+
+        function renderNivelSystem() {
+            let totalEntradas = appState.transactions.filter(t=>t.type==='entrada').reduce((a,b)=>a+b.amount,0);
+            let totalBens = appState.bens.reduce((a,b)=>a+b.amount,0);
+            let totalInvestido = appState.investments.reduce((a,b)=>a+b.amount,0);
+            let totalDividas = appState.debts.reduce((a,b)=>a+(b.installmentVal*b.remainingInstallments),0);
+
+            const netWorth = (totalEntradas + totalBens + totalInvestido) - totalDividas;
+            document.getElementById('netWorthVal').innerText = formatCurrency(netWorth);
+
+            let level = 1;
+            let title = "Iniciante nos Trilhos";
+            let desc = "Construindo as bases para o sucesso financeiro.";
+            let nextXP = 10000;
+
+            if (netWorth >= 500000) {
+                level = 5; title = "Magnata dos Trilhos"; desc = "Independência financeira total conquistada!"; nextXP = 1000000;
+            } else if (netWorth >= 100000) {
+                level = 4; title = "Investidor Consolidado"; desc = "Patrimônio robusto e gerador de renda passiva."; nextXP = 500000;
+            } else if (netWorth >= 30000) {
+                level = 3; title = "Controlador Avançado"; desc = "Bons investimentos e controle rigoroso."; nextXP = 100000;
+            } else if (netWorth >= 5000) {
+                level = 2; title = "Em Evolução"; desc = "Saindo do vermelho e montando reserva."; nextXP = 30000;
+            }
+
+            const pct = Math.min(100, Math.max(0, Math.round((netWorth / nextXP) * 100)));
+            document.getElementById('levelBadgeIcon').innerText = level;
+            document.getElementById('levelTitle').innerText = title;
+            document.getElementById('levelDesc').innerText = desc;
+            document.getElementById('levelProgressText').innerText = `Progresso Patrimonial (Meta Nível ${level + 1}: ${formatCurrency(nextXP)})`;
+            document.getElementById('levelProgressPct').innerText = `${pct}%`;
+            document.getElementById('levelBar').style.width = `${pct}%`;
+
+            const achievementsGrid = document.getElementById('achievementsGrid');
+            achievementsGrid.innerHTML = `
+                <div class="p-4 rounded-2xl border ${netWorth > 0 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-800/40 border-slate-700 text-gray-500'}">
+                    <h4 class="font-bold text-sm mb-1">Primeiro Passo</h4>
+                    <p class="text-xs">Cadastrar primeira transação ou bem.</p>
+                </div>
+                <div class="p-4 rounded-2xl border ${totalInvestido > 0 ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-slate-800/40 border-slate-700 text-gray-500'}">
+                    <h4 class="font-bold text-sm mb-1">Investidor</h4>
+                    <p class="text-xs">Fazer o primeiro aporte em ativos.</p>
+                </div>
+                <div class="p-4 rounded-2xl border ${appState.bens.length > 0 ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300' : 'bg-slate-800/40 border-slate-700 text-gray-500'}">
+                    <h4 class="font-bold text-sm mb-1">Patrimônio Físico</h4>
+                    <p class="text-xs">Adicionar veículos ou imóveis quitados.</p>
+                </div>
+                <div class="p-4 rounded-2xl border ${netWorth >= 50000 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-slate-800/40 border-slate-700 text-gray-500'}">
+                    <h4 class="font-bold text-sm mb-1">R$ 50k Acumulados</h4>
+                    <p class="text-xs">Atingir R$ 50.000 de patrimônio líquido.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
